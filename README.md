@@ -67,6 +67,5 @@ Distributed under the Unlicense License. See `LICENSE` for more information.
 
 ## TODO:
 
-- [ ] add tests
-- [ ] improve Dockerfile
-- [ ] unify error names
+- [ ] Add tests
+- [ ] Unify error names
