@@ -63,9 +63,9 @@ In order to run it locally, you will need to:
 
 Distributed under the Unlicense License. See `LICENSE` for more information.
 
-<p align="center">(<a href="#top">back to top</a>)</p>
-
 ## TODO:
 
 - [ ] Add tests
 - [ ] Unify error names
+
+<p align="center">(<a href="#top">back to top</a>)</p>
