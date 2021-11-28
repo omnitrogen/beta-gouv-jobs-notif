@@ -6,9 +6,9 @@ Get a push notification when a new offers pops up on  [beta.gouv.fr/recrutement]
 
 ## About
 
-As I am looking out to join a project at [beta.gouv](https://beta.gouv.fr), I wanted to automate the job offers discovery, to avoir having to reload the same page over and over again.
+As I am looking out to join a project at [beta.gouv](https://beta.gouv.fr), I wanted to automate the job offers discovery, to avoid having to reload the same page over and over again.
 
-To serve push notification to my mobile device, I chose [PushNotifier](https://pushnotifier.de). With that free service, it is possible to send notifications to an Android or iOS device, to Telegram, or even to a Webhook for more flexibility.
+To send a push notification to my mobile device, I chose [PushNotifier](https://pushnotifier.de). With that free service, it is possible to send notifications to an Android or iOS device, to Telegram, or even to a Webhook for more flexibility.
 
 ---
 
