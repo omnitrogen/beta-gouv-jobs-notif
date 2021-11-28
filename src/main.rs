@@ -1,89 +1,68 @@
+mod database;
+mod feed;
+mod notifier;
 mod structs;
 
-extern crate atom_syndication;
-extern crate base64;
 extern crate dotenv_codegen;
-extern crate reqwest;
-extern crate serde;
-extern crate serde_json;
+extern crate log;
 
-use crate::structs::Device;
-use atom_syndication::Feed;
 use dotenv_codegen::dotenv;
-use reqwest::header::AUTHORIZATION;
-use std::{error::Error, thread, time};
+use log::info;
+use std::{thread, time};
 
-const PUSH_NOTIFIER_API: &str = "https://api.pushnotifier.de/v2";
-const BETA_GOUV_JOBS_FEED: &str = "https://beta.gouv.fr/jobs.xml";
-const APP_PACKAGE_NAME: &str = dotenv!("APP_PACKAGE_NAME");
 const API_TOKEN: &str = dotenv!("API_TOKEN");
+const APP_PACKAGE_NAME: &str = dotenv!("APP_PACKAGE_NAME");
 const APP_TOKEN: &str = dotenv!("APP_TOKEN");
+const BETA_GOUV_JOBS_FEED: &str = "https://beta.gouv.fr/jobs.xml";
+const DB_NAME: &str = "job_entries.db";
+const PUSH_NOTIFIER_API: &str = "https://api.pushnotifier.de/v2";
 
 fn main() {
-    let devices_ids = get_devices();
+    // init env logger
+    env_logger::init();
 
-    match devices_ids {
-        Ok(v) => {
-            if v.is_empty() {
-                println!("The device list is empty!")
-            } else {
-                let devices_ids = v;
-                println!("{:?}", devices_ids);
-            }
-        }
-        Err(e) => println!("error parsing header: {:?}", e),
-    }
+    // create `job_entries.db` database if it doesn't exist, as well as the `jobs` table
+    let conn = database::init_db(DB_NAME).expect("Could not initiate the database.");
 
-    let feed = get_atom_feed();
+    // create PushNotifier API client
+    let client = notifier::create_client(APP_PACKAGE_NAME, API_TOKEN, APP_TOKEN)
+        .expect("Error during API client creation.");
 
-    match feed {
-        Ok(v) => {
-            let feed = v;
-            for (i, entry) in feed.entries.into_iter().enumerate() {
-                println!("entry {}: {:?}", i, entry);
-            }
-            return;
-        }
-        Err(e) => println!("error parsing feed {:?}", e),
-    }
+    // fetch a list of devices ids that you added on your PushNotifier account
+    let devices_ids = notifier::get_devices(&client, PUSH_NOTIFIER_API)
+        .expect("Error fetching PushNotifier devices");
 
+    // on the first run, the database is empty
+    let mut first_run = database::is_table_empty(&conn)
+        .expect("Can't determine whether the table is empty or not.");
+
+    // executes every 15 minutes
     loop {
-        println!("hehe");
-        thread::sleep(time::Duration::from_millis(900000));
+        // fetch the beta.gouv atom feed
+        let feed =
+            feed::get_atom_feed(BETA_GOUV_JOBS_FEED).expect("Unable to get beta.gouv Atom feed.");
+
+        // iterate over entries starting with the most recent one
+        for entry in feed.entries.into_iter() {
+            if database::exists(&conn, &entry)
+                .expect("Error checking if the entry exists in database.")
+            {
+                // if the most recent one is already in the database, do nothing
+                break;
+            } else {
+                // else insert the latest entry in the database
+                database::insert(&conn, &entry).expect("Couldn't insert new entry in database.");
+                info!("Inserting new entry '{}' to database.", entry.id);
+                if !first_run {
+                    // push notification if it isn't the first run
+                    // (we do not want a notification for every entry on the first run)
+                    notifier::push_notification(&client, PUSH_NOTIFIER_API, &entry, &devices_ids)
+                        .expect("Couldn't push the notification.");
+                    info!("Pushing notification '{}'.", entry.id);
+                }
+            }
+        }
+        first_run = false;
+        thread::sleep(time::Duration::from_millis(1000 * 60 * 15));
     }
-}
-
-fn get_atom_feed() -> Result<Feed, Box<dyn Error>> {
-    let url = BETA_GOUV_JOBS_FEED;
-
-    let res = reqwest::blocking::get(url)?.bytes()?;
-
-    let feed = Feed::read_from(&res[..])?;
-
-    Ok(feed)
-}
-
-fn get_devices() -> Result<Vec<String>, reqwest::Error> {
-    let client = reqwest::blocking::Client::new();
-
-    let url = format!("{}/devices", PUSH_NOTIFIER_API);
-
-    let auth_payload = format!("{}:{}", APP_PACKAGE_NAME, API_TOKEN);
-
-    let auth_payload_as_bytes = auth_payload.as_bytes();
-
-    let res = client
-        .get(url)
-        .header(
-            AUTHORIZATION,
-            format!("Basic {}", base64::encode(auth_payload_as_bytes)),
-        )
-        .header("X-AppToken", APP_TOKEN)
-        .send()?;
-
-    let devices: Vec<Device> = res.json()?;
-
-    let devices_ids: Vec<String> = devices.into_iter().map(|x| x.id).collect();
-
-    Ok(devices_ids)
 }
