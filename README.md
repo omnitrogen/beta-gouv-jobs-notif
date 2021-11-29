@@ -1,6 +1,6 @@
 # beta.gouv jobs push notification
 
-Get a push notification when a new offers pops up on  [beta.gouv.fr/recrutement](https://beta.gouv.fr/recrutement)! :vibration_mode:
+Get a push notification when a new offer pops up on  [beta.gouv.fr/recrutement](https://beta.gouv.fr/recrutement)! :vibration_mode:
 
 ---
 
