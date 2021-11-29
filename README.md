@@ -53,7 +53,11 @@ In order to run it locally, you will need to:
             ```sh
             docker build -t beta-gouv-jobs-notif .
             ```
-        2. Run the container:
+        2. Remove the dangling intermediate image:
+            ```sh
+            docker image prune --filter label=stage=builder -f
+            ```
+        3. Run the container:
             ```sh
             docker run --rm -it beta-gouv-jobs-notif
             ```
