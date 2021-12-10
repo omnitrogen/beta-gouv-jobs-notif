@@ -1,9 +1,3 @@
-extern crate atom_syndication;
-extern crate base64;
-extern crate reqwest;
-extern crate serde;
-extern crate serde_json;
-
 use crate::structs::Device;
 use atom_syndication::Entry;
 use reqwest::{header, Result};

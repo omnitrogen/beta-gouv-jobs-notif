@@ -1,6 +1,3 @@
-extern crate atom_syndication;
-extern crate rusqlite;
-
 use atom_syndication::Entry;
 use rusqlite::{params, Connection, Result};
 

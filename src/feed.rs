@@ -1,5 +1,3 @@
-extern crate atom_syndication;
-
 use atom_syndication::Feed;
 use std::error::Error;
 

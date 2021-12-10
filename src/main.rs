@@ -3,9 +3,6 @@ mod feed;
 mod notifier;
 mod structs;
 
-extern crate dotenv_codegen;
-extern crate log;
-
 use dotenv_codegen::dotenv;
 use log::info;
 use std::{thread, time};
