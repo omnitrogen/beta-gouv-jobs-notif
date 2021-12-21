@@ -44,8 +44,9 @@ fn main() {
             if database::exists(&conn, &entry)
                 .expect("Error checking if the entry exists in database.")
             {
-                // if the most recent one is already in the database, do nothing
-                break;
+                // if the most recent one is already in the database, continue to next iteration
+                // changed from `break` because offers are not always ordered in descending order
+                continue;
             } else {
                 // else insert the latest entry in the database
                 database::insert(&conn, &entry).expect("Couldn't insert new entry in database.");
